@@ -716,6 +716,12 @@
         const goalPercent = Math.min(100, Math.round((bot.todayUsd / 1.00) * 100));
         const initial = bot.botName.charAt(0).toUpperCase();
 
+        const now = new Date();
+        const hoursElapsedToday = Math.max(1, now.getHours() + now.getMinutes() / 60);
+        const hourlyRate = (bot.hourlyUsd && bot.hourlyUsd > 0)
+          ? bot.hourlyUsd
+          : (bot.todayUsd > 0 ? (bot.todayUsd / hoursElapsedToday) : 0);
+
         return `
           <div class="bot-card" style="--card-color: ${accentColor}">
             <div class="bot-card-glow"></div>
@@ -749,8 +755,8 @@
                 <h4 class="text-emerald">$${bot.todayUsd.toFixed(2)}</h4>
               </div>
               <div class="stat-block">
-                <p>Acumulado</p>
-                <h4>$${bot.lifetimeUsd.toFixed(2)}</h4>
+                <p>Média/h</p>
+                <h4 class="text-gradient-cyan">$${hourlyRate.toFixed(2)}/h</h4>
               </div>
             </div>
 

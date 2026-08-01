@@ -95,6 +95,7 @@ const server = http.createServer(async (req, res) => {
           botName,
           todayUsd: parseFloat(data.todayUsd) || 0,
           lifetimeUsd: parseFloat(data.lifetimeUsd) || 0,
+          hourlyUsd: parseFloat(data.hourlyUsd) || 0,
           pendingUsd: String(data.pendingUsd || "0.00"),
           persona: data.persona || "desconhecido",
           isNight: Boolean(data.isNight),

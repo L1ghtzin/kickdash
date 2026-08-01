@@ -15,7 +15,8 @@ function sendJson(res, statusCode, data) {
   res.writeHead(statusCode, {
     "Content-Type": "application/json",
     "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Headers": "Content-Type"
+    "Access-Control-Allow-Headers": "Content-Type",
+    "Cache-Control": "no-cache, no-store, must-revalidate"
   });
   res.end(JSON.stringify(data));
 }
@@ -50,6 +51,15 @@ const server = http.createServer(async (req, res) => {
   }
 
   const cleanPath = pathname.toLowerCase().replace(/\/+$/, "") || "/";
+
+  // Tratamento de Favicon (Evita requisição do navegador cair no fallback)
+  if (cleanPath === "/favicon.ico") {
+    res.writeHead(204, {
+      "Content-Type": "image/x-icon",
+      "Cache-Control": "public, max-age=86400"
+    });
+    return res.end();
+  }
 
   // Rota 1: GET /ping (Health check para Render e Uptime Monitors)
   if (method === "GET" && cleanPath === "/ping") {
@@ -148,7 +158,10 @@ const server = http.createServer(async (req, res) => {
   };
 
   const contentType = contentTypes[ext] || "text/html; charset=utf-8";
-  res.writeHead(200, { "Content-Type": contentType });
+  res.writeHead(200, {
+    "Content-Type": contentType,
+    "Cache-Control": "no-cache, no-store, must-revalidate"
+  });
   return fs.createReadStream(filePath).pipe(res);
 });
 

@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KickBacks Bot Network Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-dark: #0f172a;
+      --bg-card: rgba(30, 41, 59, 0.7);
+      --bg-card-hover: rgba(51, 65, 85, 0.8);
+      --border-color: rgba(255, 255, 255, 0.1);
+      --accent-primary: #6366f1;
+      --accent-success: #10b981;
+      --accent-warning: #f59e0b;
+      --accent-danger: #ef4444;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: radial-gradient(circle at top right, #1e1b4b, var(--bg-dark));
+      color: var(--text-main);
+      min-height: 100vh;
+      padding: 2rem 1.5rem;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+      padding-bottom: 1.5rem;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .brand-logo {
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, #6366f1, #a855f7);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 1.25rem;
+      box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+    }
+
+    .brand-title h1 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .brand-title p {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    .live-status {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: rgba(16, 185, 129, 0.15);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      padding: 0.4rem 0.8rem;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      color: var(--accent-success);
+    }
+
+    .pulse-dot {
+      width: 8px;
+      height: 8px;
+      background-color: var(--accent-success);
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+      70% { transform: scale(1); box-shadow: 0 0 0 8px rgba(16, 185, 129, 0); }
+      100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+    }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1.25rem;
+      margin-bottom: 2.5rem;
+    }
+
+    .summary-card {
+      background: var(--bg-card);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 1.25rem;
+      transition: transform 0.2s ease, border-color 0.2s ease;
+    }
+
+    .summary-card:hover {
+      transform: translateY(-2px);
+      border-color: rgba(99, 102, 241, 0.4);
+    }
+
+    .summary-title {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-bottom: 0.5rem;
+    }
+
+    .summary-value {
+      font-size: 1.75rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+
+    .text-gradient {
+      background: linear-gradient(135deg, #a855f7, #6366f1);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .text-green {
+      color: var(--accent-success);
+    }
+
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.25rem;
+    }
+
+    .section-title {
+      font-size: 1.2rem;
+      font-weight: 600;
+    }
+
+    .bots-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .bot-card {
+      background: var(--bg-card);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+      position: relative;
+      overflow: hidden;
+      transition: all 0.25s ease;
+    }
+
+    .bot-card:hover {
+      background: var(--bg-card-hover);
+      border-color: rgba(255, 255, 255, 0.2);
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3);
+    }
+
+    .bot-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 4px;
+      background: var(--card-accent, var(--accent-primary));
+    }
+
+    .bot-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+
+    .bot-name {
+      font-size: 1.3rem;
+      font-weight: 700;
+    }
+
+    .bot-status-badge {
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 0.3rem 0.7rem;
+      border-radius: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .status-active {
+      background: rgba(16, 185, 129, 0.2);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.4);
+    }
+
+    .status-night {
+      background: rgba(245, 158, 11, 0.2);
+      color: #fbbf24;
+      border: 1px solid rgba(245, 158, 11, 0.4);
+    }
+
+    .status-offline {
+      background: rgba(239, 68, 68, 0.2);
+      color: #f87171;
+      border: 1px solid rgba(239, 68, 68, 0.4);
+    }
+
+    .bot-stats-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      background: rgba(15, 23, 42, 0.5);
+      border-radius: 12px;
+      padding: 1rem;
+    }
+
+    .stat-item p {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-bottom: 0.25rem;
+    }
+
+    .stat-item h3 {
+      font-size: 1.2rem;
+      font-weight: 700;
+    }
+
+    .bot-details {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    .detail-row {
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .detail-row span:last-child {
+      color: var(--text-main);
+      font-weight: 500;
+    }
+
+    .bot-footer {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      display: flex;
+      justify-content: space-between;
+      border-top: 1px solid var(--border-color);
+      padding-top: 0.75rem;
+      margin-top: auto;
+    }
+
+    .empty-state {
+      grid-column: 1 / -1;
+      text-align: center;
+      padding: 4rem 2rem;
+      background: var(--bg-card);
+      border-radius: 20px;
+      border: 1px dashed var(--border-color);
+      color: var(--text-muted);
+    }
+
+    .empty-state h3 {
+      font-size: 1.25rem;
+      margin-bottom: 0.5rem;
+      color: var(--text-main);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="brand">
+        <div class="brand-logo">K</div>
+        <div class="brand-title">
+          <h1>KickBacks Bot Network</h1>
+          <p>Painel de Telemetria e Monitoramento Central</p>
+        </div>
+      </div>
+      <div class="live-status">
+        <div class="pulse-dot"></div>
+        <span>Ao Vivo (Auto-refresh 5s)</span>
+      </div>
+    </header>
+
+    <div class="summary-grid">
+      <div class="summary-card">
+        <div class="summary-title">Bots Ativos / Total</div>
+        <div class="summary-value" id="summary-bots">0 / 0</div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-title">Ganhos de Hoje (Rede)</div>
+        <div class="summary-value text-green" id="summary-today">$0.00</div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-title">Ganhos Acumulados (Lifetime)</div>
+        <div class="summary-value text-gradient" id="summary-lifetime">$0.00</div>
+      </div>
+    </div>
+
+    <div class="section-header">
+      <h2 class="section-title">Instâncias de Bots Registradas</h2>
+    </div>
+
+    <div class="bots-grid" id="bots-container">
+      <div class="empty-state">
+        <h3>Nenhum bot conectado ainda</h3>
+        <p>Configure a variável <code>DASHBOARD_URL</code> no <code>.env</code> dos seus bots para receber dados ao vivo.</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    async function fetchBotsData() {
+      try {
+        const res = await fetch('/api/bots');
+        if (!res.ok) return;
+        const data = await res.json();
+        renderDashboard(data);
+      } catch (err) {
+        console.error('Erro ao buscar dados do dashboard:', err);
+      }
+    }
+
+    function renderDashboard(data) {
+      const { summary, bots } = data;
+
+      document.getElementById('summary-bots').textContent = `${summary.onlineBots} / ${summary.totalBots}`;
+      document.getElementById('summary-today').textContent = `$${summary.totalTodayUsd.toFixed(2)}`;
+      document.getElementById('summary-lifetime').textContent = `$${summary.totalLifetimeUsd.toFixed(2)}`;
+
+      const container = document.getElementById('bots-container');
+
+      if (!bots || bots.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <h3>Nenhum bot conectado ainda</h3>
+            <p>Configure as variáveis <code>BOT_NAME</code> e <code>DASHBOARD_URL</code> no <code>.env</code> para conectar seus bots.</p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = bots.map(bot => {
+        let badgeClass = 'status-active';
+        let badgeLabel = 'Ativo';
+        let cardAccent = '#10b981';
+
+        if (!bot.isOnline) {
+          badgeClass = 'status-offline';
+          badgeLabel = 'Offline';
+          cardAccent = '#ef4444';
+        } else if (bot.isNight) {
+          badgeClass = 'status-night';
+          badgeLabel = 'Repouso Noturno';
+          cardAccent = '#f59e0b';
+        }
+
+        return `
+          <div class="bot-card" style="--card-accent: ${cardAccent}">
+            <div class="bot-header">
+              <div class="bot-name">${escapeHtml(bot.botName)}</div>
+              <div class="bot-status-badge ${badgeClass}">${badgeLabel}</div>
+            </div>
+
+            <div class="bot-stats-row">
+              <div class="stat-item">
+                <p>Hoje</p>
+                <h3 class="text-green">$${bot.todayUsd.toFixed(2)}</h3>
+              </div>
+              <div class="stat-item">
+                <p>Lifetime</p>
+                <h3>$${bot.lifetimeUsd.toFixed(2)}</h3>
+              </div>
+            </div>
+
+            <div class="bot-details">
+              <div class="detail-row">
+                <span>Pendente / Retirada:</span>
+                <span>$${bot.pendingUsd}</span>
+              </div>
+              <div class="detail-row">
+                <span>Persona Circadiana:</span>
+                <span>${escapeHtml(bot.persona)}</span>
+              </div>
+              <div class="detail-row">
+                <span>Fase Atual:</span>
+                <span>${escapeHtml(bot.phase)}</span>
+              </div>
+              <div class="detail-row">
+                <span>Versões (Ext / CC):</span>
+                <span>v${escapeHtml(bot.extVersion)} / v${escapeHtml(bot.ccVersion)}</span>
+              </div>
+            </div>
+
+            <div class="bot-footer">
+              <span>Atualizado há: ${bot.lastSeenSecondsAgo}s</span>
+              <span>ID: ${escapeHtml(bot.sessionId.slice(0, 8) || 'N/A')}</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    fetchBotsData();
+    setInterval(fetchBotsData, 5000);
+  </script>
+</body>
+</html>

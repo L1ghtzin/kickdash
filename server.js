@@ -10,6 +10,7 @@ const PORT = process.env.PORT || 3000;
 const OFFLINE_THRESHOLD_MS = 3 * 60 * 1000; // 3 minutos sem sinal = offline
 
 const botsStore = new Map();
+const pendingCommands = new Map();
 
 function sendJson(res, statusCode, data) {
   res.writeHead(statusCode, {
@@ -61,7 +62,7 @@ const server = http.createServer(async (req, res) => {
 
     const cleanPath = pathname.toLowerCase().replace(/\/+$/, "") || "/";
 
-    // Tratamento de Favicon (Evita requisição do navegador cair no fallback)
+    // Tratamento de Favicon
     if (cleanPath === "/favicon.ico") {
       res.writeHead(204, {
         "Content-Type": "image/x-icon",
@@ -70,7 +71,7 @@ const server = http.createServer(async (req, res) => {
       return res.end();
     }
 
-    // Rota 1: GET /ping (Health check para Render e Uptime Monitors)
+    // Rota 1: GET /ping
     if (method === "GET" && cleanPath === "/ping") {
       return sendJson(res, 200, {
         status: "ok",
@@ -78,6 +79,55 @@ const server = http.createServer(async (req, res) => {
         uptimeSeconds: Math.floor(process.uptime()),
         timestamp: new Date().toISOString()
       });
+    }
+
+    // Rota: POST /api/admin/command (Solicita ações como update ou login)
+    if (method === "POST" && cleanPath === "/api/admin/command") {
+      try {
+        const data = await parseJsonBody(req);
+        const action = data.action; // "update" | "login"
+        const targetBot = data.targetBot; // "all" ou botName
+        if (!action) return sendJson(res, 400, { error: "Ação é obrigatória." });
+
+        const cmdObj = { id: String(Date.now()), action };
+
+        if (!targetBot || targetBot === "all") {
+          pendingCommands.set("ALL", cmdObj);
+          for (const [bName, record] of botsStore.entries()) {
+            pendingCommands.set(bName, cmdObj);
+            record.commandStatus = `Solicitado: ${action}`;
+            record.commandMessage = `Aguardando conexão do bot para executar '${action}'...`;
+          }
+        } else {
+          pendingCommands.set(targetBot, cmdObj);
+          if (botsStore.has(targetBot)) {
+            const record = botsStore.get(targetBot);
+            record.commandStatus = `Solicitado: ${action}`;
+            record.commandMessage = `Aguardando conexão do bot para executar '${action}'...`;
+          }
+        }
+
+        return sendJson(res, 200, { status: "success", action, targetBot: targetBot || "all" });
+      } catch {
+        return sendJson(res, 400, { error: "Erro ao emitir comando admin." });
+      }
+    }
+
+    // Rota: POST /api/telemetry/command-result (Recebe resultado do comando executado pelo bot)
+    if (method === "POST" && cleanPath === "/api/telemetry/command-result") {
+      try {
+        const data = await parseJsonBody(req);
+        const { botName, loginUrl, status, message } = data;
+        if (botName && botsStore.has(botName)) {
+          const record = botsStore.get(botName);
+          if (loginUrl !== undefined) record.activeLoginUrl = loginUrl || null;
+          if (status !== undefined) record.commandStatus = status || null;
+          if (message !== undefined) record.commandMessage = message || null;
+        }
+        return sendJson(res, 200, { status: "success" });
+      } catch {
+        return sendJson(res, 400, { error: "Erro ao processar resultado do comando." });
+      }
     }
 
     // Rota 2: POST /api/telemetry (Recebe dados dos bots)
@@ -90,6 +140,7 @@ const server = http.createServer(async (req, res) => {
 
         const botName = data.botName.trim();
         const now = Date.now();
+        const existing = botsStore.get(botName) || {};
 
         const botRecord = {
           botName,
@@ -103,12 +154,30 @@ const server = http.createServer(async (req, res) => {
           extVersion: data.extVersion || "2.3.1",
           ccVersion: data.ccVersion || "2.1.220",
           sessionId: data.sessionId || "",
+          activeLoginUrl: existing.activeLoginUrl || null,
+          commandStatus: existing.commandStatus || null,
+          commandMessage: existing.commandMessage || null,
           lastSeenMs: now,
           updatedAt: new Date(now).toISOString()
         };
 
         botsStore.set(botName, botRecord);
-        return sendJson(res, 200, { status: "success", botName, timestamp: botRecord.updatedAt });
+
+        // Verificar se há comando pendente para este bot
+        let pendingCommand = pendingCommands.get(botName);
+        if (!pendingCommand && pendingCommands.has("ALL")) {
+          pendingCommand = pendingCommands.get("ALL");
+        }
+        if (pendingCommand) {
+          pendingCommands.delete(botName);
+        }
+
+        return sendJson(res, 200, {
+          status: "success",
+          botName,
+          timestamp: botRecord.updatedAt,
+          pendingCommand: pendingCommand || null
+        });
       } catch {
         return sendJson(res, 400, { error: "JSON inválido no corpo da requisição." });
       }

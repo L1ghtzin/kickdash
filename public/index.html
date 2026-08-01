@@ -248,6 +248,58 @@
       transition: all 0.2s ease;
     }
 
+    /* ADMIN BUTTONS */
+    .admin-btn {
+      background: rgba(30, 41, 59, 0.8);
+      border: 1px solid var(--glass-border);
+      color: #f1f5f9;
+      padding: 0.5rem 0.9rem;
+      border-radius: 10px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .admin-btn:hover {
+      background: rgba(51, 65, 85, 0.9);
+      border-color: #64748b;
+      transform: translateY(-1px);
+    }
+    .btn-update-all {
+      border-color: #3b82f6;
+      background: rgba(37, 99, 235, 0.2);
+      color: #93c5fd;
+    }
+    .btn-update-all:hover {
+      background: rgba(37, 99, 235, 0.4);
+    }
+    .btn-login-all {
+      border-color: #10b981;
+      background: rgba(16, 185, 129, 0.2);
+      color: #a7f3d0;
+    }
+    .btn-login-all:hover {
+      background: rgba(16, 185, 129, 0.4);
+    }
+    .btn-card-action {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid var(--glass-border);
+      color: #cbd5e1;
+      padding: 0.3rem 0.6rem;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .btn-card-action:hover {
+      background: rgba(255, 255, 255, 0.15);
+      color: #fff;
+    }
+
     .search-input:focus {
       border-color: var(--accent-indigo);
       box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
@@ -596,6 +648,12 @@
       </div>
 
       <div class="filters-group">
+        <button class="admin-btn btn-update-all" onclick="sendAdminCommand('update', 'all')" title="Executa git pull, build e restart em todos os bots">
+          🔄 Atualizar Todos (git pull + build)
+        </button>
+        <button class="admin-btn btn-login-all" onclick="sendAdminCommand('login', 'all')" title="Gera URL de autenticação Google para todos os bots">
+          🔑 Gerar Login em Todos
+        </button>
         <input type="text" id="search-input" class="search-input" placeholder="Buscar por nome ou persona..." oninput="handleFilterChange()">
         <button class="filter-btn active" data-filter="all" onclick="setFilter('all', this)">Todos</button>
         <button class="filter-btn" data-filter="active" onclick="setFilter('active', this)">Ativos</button>
@@ -617,6 +675,25 @@
   <script>
     let globalBotsData = [];
     let currentFilter = 'all';
+
+    async function sendAdminCommand(action, targetBot) {
+      try {
+        const res = await fetch('/api/admin/command', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action, targetBot: targetBot || 'all' })
+        });
+        if (res.ok) {
+          alert(`Comando '${action}' enviado para ${targetBot === 'all' ? 'todos os bots' : targetBot}!`);
+          loadDashboardData();
+        } else {
+          alert('Erro ao enviar comando admin.');
+        }
+      } catch (err) {
+        console.error('Erro ao enviar comando admin:', err);
+        alert('Falha na comunicação com o servidor.');
+      }
+    }
 
     async function loadDashboardData() {
       try {
@@ -722,6 +799,21 @@
           ? bot.hourlyUsd
           : (bot.todayUsd > 0 ? (bot.todayUsd / hoursElapsedToday) : 0);
 
+        const loginBoxHtml = bot.activeLoginUrl ? `
+          <div class="login-action-box" style="margin: 0.75rem 0; padding: 0.75rem; background: rgba(59, 130, 246, 0.15); border: 1px solid #3b82f6; border-radius: 10px; text-align: center;">
+            <p style="font-size: 0.8rem; margin-bottom: 0.5rem; color: #93c5fd; font-weight: 600;">🔐 Autenticação Google Solicitada</p>
+            <a href="${escapeHtml(bot.activeLoginUrl)}" target="_blank" style="display: inline-block; padding: 0.5rem 1rem; background: #2563eb; color: #fff; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 0.85rem; box-shadow: 0 4px 12px rgba(37,99,235,0.4);">
+              🌐 Fazer Login no Google
+            </a>
+          </div>
+        ` : '';
+
+        const statusBoxHtml = (bot.commandStatus || bot.commandMessage) ? `
+          <div style="font-size: 0.75rem; color: #f59e0b; background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3); padding: 0.4rem 0.6rem; border-radius: 6px; margin: 0.5rem 0;">
+            ⚡ <strong>Status:</strong> ${escapeHtml(bot.commandStatus || bot.commandMessage)}
+          </div>
+        ` : '';
+
         return `
           <div class="bot-card" style="--card-color: ${accentColor}">
             <div class="bot-card-glow"></div>
@@ -736,6 +828,9 @@
               </div>
               <div class="status-badge ${badgeClass}">${badgeText}</div>
             </div>
+
+            ${statusBoxHtml}
+            ${loginBoxHtml}
 
             <!-- Daily Goal Progress -->
             <div class="goal-progress-box">
@@ -780,13 +875,14 @@
               </div>
             </div>
 
-            <div class="bot-card-footer">
+            <div class="bot-card-footer" style="flex-wrap: wrap; gap: 0.4rem;">
               <div class="last-seen">
                 <span>⏱ Visto há ${bot.lastSeenSecondsAgo}s</span>
               </div>
-              <button class="copy-id-btn" title="Copiar ID" onclick="navigator.clipboard.writeText('${bot.sessionId}')">
-                📋 ${escapeHtml(bot.sessionId.slice(0, 6))}...
-              </button>
+              <div style="display: flex; gap: 0.3rem; margin-left: auto;">
+                <button class="btn-card-action" onclick="sendAdminCommand('login', '${escapeHtml(bot.botName)}')" title="Gerar link de login Google">🔑 Login</button>
+                <button class="btn-card-action" onclick="sendAdminCommand('update', '${escapeHtml(bot.botName)}')" title="Executar git pull e build">🔄 Atualizar</button>
+              </div>
             </div>
           </div>
         `;

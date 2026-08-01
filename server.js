@@ -36,133 +36,147 @@ function parseJsonBody(req) {
   });
 }
 
+process.on("uncaughtException", (err) => {
+  console.error("[SERVER] uncaughtException:", err);
+});
+
+process.on("unhandledRejection", (reason) => {
+  console.error("[SERVER] unhandledRejection:", reason);
+});
+
 const server = http.createServer(async (req, res) => {
-  const url = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
-  const pathname = url.pathname;
-  const method = req.method.toUpperCase();
+  try {
+    const url = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
+    const pathname = url.pathname;
+    const method = req.method.toUpperCase();
 
-  if (method === "OPTIONS") {
-    res.writeHead(204, {
-      "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Methods": "GET, POST, DELETE, OPTIONS",
-      "Access-Control-Allow-Headers": "Content-Type"
-    });
-    return res.end();
-  }
-
-  const cleanPath = pathname.toLowerCase().replace(/\/+$/, "") || "/";
-
-  // Tratamento de Favicon (Evita requisição do navegador cair no fallback)
-  if (cleanPath === "/favicon.ico") {
-    res.writeHead(204, {
-      "Content-Type": "image/x-icon",
-      "Cache-Control": "public, max-age=86400"
-    });
-    return res.end();
-  }
-
-  // Rota 1: GET /ping (Health check para Render e Uptime Monitors)
-  if (method === "GET" && cleanPath === "/ping") {
-    return sendJson(res, 200, {
-      status: "ok",
-      service: "kickbacks-dashboard",
-      uptimeSeconds: Math.floor(process.uptime()),
-      timestamp: new Date().toISOString()
-    });
-  }
-
-  // Rota 2: POST /api/telemetry (Recebe dados dos bots)
-  if (method === "POST" && cleanPath === "/api/telemetry") {
-    try {
-      const data = await parseJsonBody(req);
-      if (!data || typeof data.botName !== "string" || !data.botName.trim()) {
-        return sendJson(res, 400, { error: "Campo 'botName' é obrigatório." });
-      }
-
-      const botName = data.botName.trim();
-      const now = Date.now();
-
-      const botRecord = {
-        botName,
-        todayUsd: parseFloat(data.todayUsd) || 0,
-        lifetimeUsd: parseFloat(data.lifetimeUsd) || 0,
-        pendingUsd: String(data.pendingUsd || "0.00"),
-        persona: data.persona || "desconhecido",
-        isNight: Boolean(data.isNight),
-        phase: data.phase || "active",
-        extVersion: data.extVersion || "2.3.1",
-        ccVersion: data.ccVersion || "2.1.220",
-        sessionId: data.sessionId || "",
-        lastSeenMs: now,
-        updatedAt: new Date(now).toISOString()
-      };
-
-      botsStore.set(botName, botRecord);
-      return sendJson(res, 200, { status: "success", botName, timestamp: botRecord.updatedAt });
-    } catch {
-      return sendJson(res, 400, { error: "JSON inválido no corpo da requisição." });
+    if (method === "OPTIONS") {
+      res.writeHead(204, {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET, POST, DELETE, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type"
+      });
+      return res.end();
     }
-  }
 
-  // Rota 3: GET /api/bots (Retorna a lista agregada de todos os bots)
-  if (method === "GET" && cleanPath === "/api/bots") {
-    const now = Date.now();
-    const list = [];
-    let totalToday = 0;
-    let totalLifetime = 0;
+    const cleanPath = pathname.toLowerCase().replace(/\/+$/, "") || "/";
 
-    for (const bot of botsStore.values()) {
-      const isOnline = (now - bot.lastSeenMs) < OFFLINE_THRESHOLD_MS;
-      const botStatus = !isOnline ? "offline" : (bot.isNight ? "night_standby" : "active");
-      
-      totalToday += bot.todayUsd;
-      totalLifetime += bot.lifetimeUsd;
+    // Tratamento de Favicon (Evita requisição do navegador cair no fallback)
+    if (cleanPath === "/favicon.ico") {
+      res.writeHead(204, {
+        "Content-Type": "image/x-icon",
+        "Cache-Control": "public, max-age=86400"
+      });
+      return res.end();
+    }
 
-      list.push({
-        ...bot,
-        isOnline,
-        statusLabel: botStatus,
-        lastSeenSecondsAgo: Math.floor((now - bot.lastSeenMs) / 1000)
+    // Rota 1: GET /ping (Health check para Render e Uptime Monitors)
+    if (method === "GET" && cleanPath === "/ping") {
+      return sendJson(res, 200, {
+        status: "ok",
+        service: "kickbacks-dashboard",
+        uptimeSeconds: Math.floor(process.uptime()),
+        timestamp: new Date().toISOString()
       });
     }
 
-    list.sort((a, b) => a.botName.localeCompare(b.botName));
+    // Rota 2: POST /api/telemetry (Recebe dados dos bots)
+    if (method === "POST" && cleanPath === "/api/telemetry") {
+      try {
+        const data = await parseJsonBody(req);
+        if (!data || typeof data.botName !== "string" || !data.botName.trim()) {
+          return sendJson(res, 400, { error: "Campo 'botName' é obrigatório." });
+        }
 
-    return sendJson(res, 200, {
-      summary: {
-        totalBots: list.length,
-        onlineBots: list.filter(b => b.isOnline).length,
-        totalTodayUsd: Math.round(totalToday * 100) / 100,
-        totalLifetimeUsd: Math.round(totalLifetime * 100) / 100
-      },
-      bots: list
+        const botName = data.botName.trim();
+        const now = Date.now();
+
+        const botRecord = {
+          botName,
+          todayUsd: parseFloat(data.todayUsd) || 0,
+          lifetimeUsd: parseFloat(data.lifetimeUsd) || 0,
+          pendingUsd: String(data.pendingUsd || "0.00"),
+          persona: data.persona || "desconhecido",
+          isNight: Boolean(data.isNight),
+          phase: data.phase || "active",
+          extVersion: data.extVersion || "2.3.1",
+          ccVersion: data.ccVersion || "2.1.220",
+          sessionId: data.sessionId || "",
+          lastSeenMs: now,
+          updatedAt: new Date(now).toISOString()
+        };
+
+        botsStore.set(botName, botRecord);
+        return sendJson(res, 200, { status: "success", botName, timestamp: botRecord.updatedAt });
+      } catch {
+        return sendJson(res, 400, { error: "JSON inválido no corpo da requisição." });
+      }
+    }
+
+    // Rota 3: GET /api/bots (Retorna a lista agregada de todos os bots)
+    if (method === "GET" && cleanPath === "/api/bots") {
+      const now = Date.now();
+      const list = [];
+      let totalToday = 0;
+      let totalLifetime = 0;
+
+      for (const bot of botsStore.values()) {
+        const isOnline = (now - bot.lastSeenMs) < OFFLINE_THRESHOLD_MS;
+        const botStatus = !isOnline ? "offline" : (bot.isNight ? "night_standby" : "active");
+        
+        totalToday += bot.todayUsd;
+        totalLifetime += bot.lifetimeUsd;
+
+        list.push({
+          ...bot,
+          isOnline,
+          statusLabel: botStatus,
+          lastSeenSecondsAgo: Math.floor((now - bot.lastSeenMs) / 1000)
+        });
+      }
+
+      list.sort((a, b) => a.botName.localeCompare(b.botName));
+
+      return sendJson(res, 200, {
+        summary: {
+          totalBots: list.length,
+          onlineBots: list.filter(b => b.isOnline).length,
+          totalTodayUsd: Math.round(totalToday * 100) / 100,
+          totalLifetimeUsd: Math.round(totalLifetime * 100) / 100
+        },
+        bots: list
+      });
+    }
+
+    // Rota 4: Servir arquivos estáticos do Dashboard (com fallback para index.html)
+    let filePath = path.join(__dirname, "public", cleanPath === "/" ? "index.html" : cleanPath);
+
+    if (!fs.existsSync(filePath) || !fs.statSync(filePath).isFile()) {
+      filePath = path.join(__dirname, "public", "index.html");
+    }
+
+    const ext = path.extname(filePath).toLowerCase();
+    const contentTypes = {
+      ".html": "text/html; charset=utf-8",
+      ".css": "text/css; charset=utf-8",
+      ".js": "application/javascript; charset=utf-8",
+      ".json": "application/json",
+      ".png": "image/png",
+      ".jpg": "image/jpeg",
+      ".svg": "image/svg+xml"
+    };
+
+    const contentType = contentTypes[ext] || "text/html; charset=utf-8";
+    const content = fs.readFileSync(filePath);
+    res.writeHead(200, {
+      "Content-Type": contentType,
+      "Cache-Control": "no-cache, no-store, must-revalidate"
     });
+    return res.end(content);
+  } catch (err) {
+    console.error("[SERVER ERROR]:", err);
+    sendJson(res, 500, { error: "Erro interno no servidor." });
   }
-
-  // Rota 4: Servir arquivos estáticos do Dashboard (com fallback para index.html)
-  let filePath = path.join(__dirname, "public", cleanPath === "/" ? "index.html" : cleanPath);
-
-  if (!fs.existsSync(filePath) || !fs.statSync(filePath).isFile()) {
-    filePath = path.join(__dirname, "public", "index.html");
-  }
-
-  const ext = path.extname(filePath).toLowerCase();
-  const contentTypes = {
-    ".html": "text/html; charset=utf-8",
-    ".css": "text/css; charset=utf-8",
-    ".js": "application/javascript; charset=utf-8",
-    ".json": "application/json",
-    ".png": "image/png",
-    ".jpg": "image/jpeg",
-    ".svg": "image/svg+xml"
-  };
-
-  const contentType = contentTypes[ext] || "text/html; charset=utf-8";
-  res.writeHead(200, {
-    "Content-Type": contentType,
-    "Cache-Control": "no-cache, no-store, must-revalidate"
-  });
-  return fs.createReadStream(filePath).pipe(res);
 });
 
 server.listen(PORT, "0.0.0.0", () => {

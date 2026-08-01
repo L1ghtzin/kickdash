@@ -3,22 +3,28 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>KickBacks Bot Network Dashboard</title>
+  <title>KickBacks Network Command Center</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg-dark: #0f172a;
-      --bg-card: rgba(30, 41, 59, 0.7);
-      --bg-card-hover: rgba(51, 65, 85, 0.8);
-      --border-color: rgba(255, 255, 255, 0.1);
-      --accent-primary: #6366f1;
-      --accent-success: #10b981;
-      --accent-warning: #f59e0b;
-      --accent-danger: #ef4444;
-      --text-main: #f8fafc;
-      --text-muted: #94a3b8;
+      --bg-gradient: radial-gradient(circle at 15% 15%, #1e1b4b 0%, #0f172a 45%, #070a12 100%);
+      --glass-bg: rgba(15, 23, 42, 0.65);
+      --glass-bg-hover: rgba(30, 41, 59, 0.8);
+      --glass-border: rgba(255, 255, 255, 0.08);
+      --glass-border-glow: rgba(99, 102, 241, 0.35);
+      
+      --accent-indigo: #6366f1;
+      --accent-purple: #a855f7;
+      --accent-cyan: #06b6d4;
+      --accent-emerald: #10b981;
+      --accent-amber: #f59e0b;
+      --accent-rose: #f43f5e;
+
+      --text-primary: #f8fafc;
+      --text-secondary: #94a3b8;
+      --text-dim: #64748b;
     }
 
     * {
@@ -28,406 +34,742 @@
     }
 
     body {
-      font-family: 'Inter', sans-serif;
-      background: radial-gradient(circle at top right, #1e1b4b, var(--bg-dark));
-      color: var(--text-main);
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background: var(--bg-gradient);
+      color: var(--text-primary);
       min-height: 100vh;
       padding: 2rem 1.5rem;
+      background-attachment: fixed;
     }
 
     .container {
-      max-width: 1200px;
+      max-width: 1280px;
       margin: 0 auto;
     }
 
+    /* HEADER */
     header {
       display: flex;
+      flex-wrap: wrap;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 2rem;
+      gap: 1.5rem;
+      margin-bottom: 2.5rem;
       padding-bottom: 1.5rem;
-      border-bottom: 1px solid var(--border-color);
+      border-bottom: 1px solid var(--glass-border);
     }
 
     .brand {
       display: flex;
       align-items: center;
-      gap: 0.75rem;
+      gap: 1rem;
     }
 
-    .brand-logo {
-      width: 40px;
-      height: 40px;
-      background: linear-gradient(135deg, #6366f1, #a855f7);
-      border-radius: 10px;
+    .brand-icon {
+      width: 48px;
+      height: 48px;
+      background: linear-gradient(135deg, var(--accent-indigo), var(--accent-purple));
+      border-radius: 14px;
       display: flex;
       align-items: center;
       justify-content: center;
       font-weight: 800;
-      font-size: 1.25rem;
-      box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
-    }
-
-    .brand-title h1 {
       font-size: 1.5rem;
-      font-weight: 700;
-      letter-spacing: -0.02em;
+      color: #fff;
+      box-shadow: 0 8px 24px rgba(99, 102, 241, 0.35);
+      border: 1px solid rgba(255, 255, 255, 0.2);
     }
 
-    .brand-title p {
-      font-size: 0.85rem;
-      color: var(--text-muted);
-    }
-
-    .live-status {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      background: rgba(16, 185, 129, 0.15);
-      border: 1px solid rgba(16, 185, 129, 0.3);
-      padding: 0.4rem 0.8rem;
-      border-radius: 20px;
-      font-size: 0.85rem;
-      color: var(--accent-success);
-    }
-
-    .pulse-dot {
-      width: 8px;
-      height: 8px;
-      background-color: var(--accent-success);
-      border-radius: 50%;
-      animation: pulse 2s infinite;
-    }
-
-    @keyframes pulse {
-      0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
-      70% { transform: scale(1); box-shadow: 0 0 0 8px rgba(16, 185, 129, 0); }
-      100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
-    }
-
-    .summary-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 1.25rem;
-      margin-bottom: 2.5rem;
-    }
-
-    .summary-card {
-      background: var(--bg-card);
-      backdrop-filter: blur(12px);
-      border: 1px solid var(--border-color);
-      border-radius: 16px;
-      padding: 1.25rem;
-      transition: transform 0.2s ease, border-color 0.2s ease;
-    }
-
-    .summary-card:hover {
-      transform: translateY(-2px);
-      border-color: rgba(99, 102, 241, 0.4);
-    }
-
-    .summary-title {
-      font-size: 0.85rem;
-      color: var(--text-muted);
-      margin-bottom: 0.5rem;
-    }
-
-    .summary-value {
-      font-size: 1.75rem;
+    .brand-text h1 {
+      font-size: 1.65rem;
       font-weight: 800;
-      letter-spacing: -0.02em;
-    }
-
-    .text-gradient {
-      background: linear-gradient(135deg, #a855f7, #6366f1);
+      letter-spacing: -0.03em;
+      background: linear-gradient(to right, #ffffff, #cbd5e1);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
     }
 
-    .text-green {
-      color: var(--accent-success);
+    .brand-text p {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      font-weight: 500;
     }
 
-    .section-header {
+    .header-controls {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .live-badge {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      background: rgba(16, 185, 129, 0.12);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      padding: 0.5rem 1rem;
+      border-radius: 9999px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--accent-emerald);
+      backdrop-filter: blur(10px);
+    }
+
+    .pulse-dot {
+      width: 9px;
+      height: 9px;
+      background-color: var(--accent-emerald);
+      border-radius: 50%;
+      box-shadow: 0 0 10px var(--accent-emerald);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(0.9); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+      70% { transform: scale(1.1); box-shadow: 0 0 0 8px rgba(16, 185, 129, 0); }
+      100% { transform: scale(0.9); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+    }
+
+    /* KPI METRICS CARDS */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 1.25rem;
+      margin-bottom: 2.5rem;
+    }
+
+    .kpi-card {
+      background: var(--glass-bg);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--glass-border);
+      border-radius: 20px;
+      padding: 1.5rem;
+      position: relative;
+      overflow: hidden;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .kpi-card:hover {
+      transform: translateY(-3px);
+      border-color: var(--glass-border-glow);
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+    }
+
+    .kpi-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 1.25rem;
+      margin-bottom: 0.75rem;
     }
 
-    .section-title {
-      font-size: 1.2rem;
+    .kpi-title {
+      font-size: 0.85rem;
       font-weight: 600;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
     }
 
+    .kpi-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .kpi-value {
+      font-size: 2.1rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      line-height: 1.1;
+      margin-bottom: 0.5rem;
+    }
+
+    .kpi-subtitle {
+      font-size: 0.8rem;
+      color: var(--text-dim);
+      font-weight: 500;
+    }
+
+    .text-emerald { color: var(--accent-emerald); }
+    .text-indigo { color: var(--accent-indigo); }
+    .text-amber { color: var(--accent-amber); }
+
+    .text-gradient-purple {
+      background: linear-gradient(135deg, #c084fc, #a855f7);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .text-gradient-cyan {
+      background: linear-gradient(135deg, #38bdf8, #818cf8);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    /* CONTROLS & FILTER BAR */
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .section-headline h2 {
+      font-size: 1.35rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .filters-group {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    .search-input {
+      background: rgba(15, 23, 42, 0.7);
+      border: 1px solid var(--glass-border);
+      border-radius: 12px;
+      padding: 0.55rem 1rem;
+      color: var(--text-primary);
+      font-family: inherit;
+      font-size: 0.85rem;
+      width: 220px;
+      outline: none;
+      transition: all 0.2s ease;
+    }
+
+    .search-input:focus {
+      border-color: var(--accent-indigo);
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+    }
+
+    .filter-btn {
+      background: rgba(30, 41, 59, 0.5);
+      border: 1px solid var(--glass-border);
+      border-radius: 12px;
+      padding: 0.55rem 1rem;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .filter-btn:hover, .filter-btn.active {
+      background: var(--accent-indigo);
+      color: #fff;
+      border-color: var(--accent-indigo);
+      box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+    }
+
+    /* BOTS GRID */
     .bots-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
       gap: 1.5rem;
     }
 
+    /* BOT CARD */
     .bot-card {
-      background: var(--bg-card);
-      backdrop-filter: blur(12px);
-      border: 1px solid var(--border-color);
-      border-radius: 20px;
-      padding: 1.5rem;
+      background: var(--glass-bg);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--glass-border);
+      border-radius: 24px;
+      padding: 1.6rem;
       display: flex;
       flex-direction: column;
       gap: 1.25rem;
       position: relative;
       overflow: hidden;
-      transition: all 0.25s ease;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     .bot-card:hover {
-      background: var(--bg-card-hover);
-      border-color: rgba(255, 255, 255, 0.2);
-      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3);
+      background: var(--glass-bg-hover);
+      border-color: var(--glass-border-glow);
+      transform: translateY(-4px);
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4);
     }
 
-    .bot-card::before {
-      content: '';
+    .bot-card-glow {
       position: absolute;
       top: 0;
       left: 0;
       width: 100%;
       height: 4px;
-      background: var(--card-accent, var(--accent-primary));
+      background: var(--card-color, var(--accent-indigo));
     }
 
-    .bot-header {
+    .bot-card-header {
       display: flex;
       justify-content: space-between;
-      align-items: flex-start;
+      align-items: center;
     }
 
-    .bot-name {
-      font-size: 1.3rem;
+    .bot-profile {
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+    }
+
+    .bot-avatar {
+      width: 44px;
+      height: 44px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(168, 85, 247, 0.2));
+      border: 1px solid var(--glass-border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 1.15rem;
+      color: var(--text-primary);
+    }
+
+    .bot-identity h3 {
+      font-size: 1.25rem;
       font-weight: 700;
+      letter-spacing: -0.02em;
     }
 
-    .bot-status-badge {
+    .bot-identity p {
       font-size: 0.75rem;
-      font-weight: 600;
-      padding: 0.3rem 0.7rem;
-      border-radius: 12px;
+      color: var(--text-dim);
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .status-badge {
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 0.35rem 0.8rem;
+      border-radius: 9999px;
       text-transform: uppercase;
-      letter-spacing: 0.05em;
+      letter-spacing: 0.04em;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
     }
 
-    .status-active {
-      background: rgba(16, 185, 129, 0.2);
+    .status-badge-active {
+      background: rgba(16, 185, 129, 0.15);
       color: #34d399;
-      border: 1px solid rgba(16, 185, 129, 0.4);
+      border: 1px solid rgba(16, 185, 129, 0.35);
     }
 
-    .status-night {
-      background: rgba(245, 158, 11, 0.2);
+    .status-badge-night {
+      background: rgba(245, 158, 11, 0.15);
       color: #fbbf24;
-      border: 1px solid rgba(245, 158, 11, 0.4);
+      border: 1px solid rgba(245, 158, 11, 0.35);
     }
 
-    .status-offline {
-      background: rgba(239, 68, 68, 0.2);
-      color: #f87171;
-      border: 1px solid rgba(239, 68, 68, 0.4);
+    .status-badge-offline {
+      background: rgba(244, 63, 94, 0.15);
+      color: #fb7185;
+      border: 1px solid rgba(244, 63, 94, 0.35);
     }
 
-    .bot-stats-row {
+    /* DAILY GOAL PROGRESS BAR */
+    .goal-progress-box {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+
+    .goal-labels {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.78rem;
+      font-weight: 600;
+    }
+
+    .goal-labels span:first-child { color: var(--text-secondary); }
+    .goal-labels span:last-child { color: var(--accent-emerald); }
+
+    .progress-bar-bg {
+      width: 100%;
+      height: 8px;
+      background: rgba(15, 23, 42, 0.8);
+      border-radius: 9999px;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #10b981, #34d399);
+      border-radius: 9999px;
+      transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* STATS METRIC DISPLAY */
+    .bot-metrics-panel {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 1rem;
-      background: rgba(15, 23, 42, 0.5);
-      border-radius: 12px;
-      padding: 1rem;
+      background: rgba(15, 23, 42, 0.55);
+      border-radius: 16px;
+      padding: 1.1rem;
+      border: 1px solid rgba(255, 255, 255, 0.04);
     }
 
-    .stat-item p {
-      font-size: 0.75rem;
-      color: var(--text-muted);
+    .stat-block p {
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
       margin-bottom: 0.25rem;
     }
 
-    .stat-item h3 {
-      font-size: 1.2rem;
-      font-weight: 700;
+    .stat-block h4 {
+      font-size: 1.35rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
     }
 
-    .bot-details {
+    /* SPECIFICATIONS LIST */
+    .spec-grid {
       display: flex;
       flex-direction: column;
-      gap: 0.5rem;
-      font-size: 0.85rem;
-      color: var(--text-muted);
+      gap: 0.55rem;
+      font-size: 0.82rem;
     }
 
-    .detail-row {
+    .spec-item {
       display: flex;
       justify-content: space-between;
+      color: var(--text-secondary);
     }
 
-    .detail-row span:last-child {
-      color: var(--text-main);
-      font-weight: 500;
+    .spec-item .value {
+      color: var(--text-primary);
+      font-weight: 600;
     }
 
-    .bot-footer {
+    .pill-tag {
+      background: rgba(255, 255, 255, 0.06);
+      padding: 0.15rem 0.5rem;
+      border-radius: 6px;
       font-size: 0.75rem;
-      color: var(--text-muted);
-      display: flex;
-      justify-content: space-between;
-      border-top: 1px solid var(--border-color);
-      padding-top: 0.75rem;
-      margin-top: auto;
+      font-family: 'JetBrains Mono', monospace;
     }
 
-    .empty-state {
+    /* BOT FOOTER */
+    .bot-card-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 0.85rem;
+      border-top: 1px solid var(--glass-border);
+      font-size: 0.75rem;
+      color: var(--text-dim);
+    }
+
+    .last-seen {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .copy-id-btn {
+      background: none;
+      border: none;
+      color: var(--text-secondary);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem;
+      cursor: pointer;
+      transition: color 0.2s;
+    }
+
+    .copy-id-btn:hover {
+      color: var(--accent-indigo);
+    }
+
+    /* EMPTY STATE */
+    .empty-container {
       grid-column: 1 / -1;
       text-align: center;
-      padding: 4rem 2rem;
-      background: var(--bg-card);
-      border-radius: 20px;
-      border: 1px dashed var(--border-color);
-      color: var(--text-muted);
+      padding: 5rem 2rem;
+      background: var(--glass-bg);
+      backdrop-filter: blur(16px);
+      border-radius: 24px;
+      border: 1px dashed var(--glass-border);
     }
 
-    .empty-state h3 {
-      font-size: 1.25rem;
+    .empty-container h3 {
+      font-size: 1.4rem;
+      font-weight: 700;
       margin-bottom: 0.5rem;
-      color: var(--text-main);
+    }
+
+    .empty-container p {
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+    }
+
+    .empty-code {
+      display: inline-block;
+      margin-top: 1rem;
+      background: rgba(15, 23, 42, 0.8);
+      padding: 0.6rem 1.2rem;
+      border-radius: 12px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      border: 1px solid var(--glass-border);
+      color: var(--accent-cyan);
     }
   </style>
 </head>
 <body>
   <div class="container">
+    <!-- HEADER -->
     <header>
       <div class="brand">
-        <div class="brand-logo">K</div>
-        <div class="brand-title">
-          <h1>KickBacks Bot Network</h1>
-          <p>Painel de Telemetria e Monitoramento Central</p>
+        <div class="brand-icon">K</div>
+        <div class="brand-text">
+          <h1>KickBacks Command Center</h1>
+          <p>Painel de Controle e Telemetria em Tempo Real</p>
         </div>
       </div>
-      <div class="live-status">
-        <div class="pulse-dot"></div>
-        <span>Ao Vivo (Auto-refresh 5s)</span>
+      <div class="header-controls">
+        <div class="live-badge">
+          <div class="pulse-dot"></div>
+          <span>REDE ONLINE (5s)</span>
+        </div>
       </div>
     </header>
 
-    <div class="summary-grid">
-      <div class="summary-card">
-        <div class="summary-title">Bots Ativos / Total</div>
-        <div class="summary-value" id="summary-bots">0 / 0</div>
+    <!-- SUMMARY KPI CARDS -->
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-header">
+          <span class="kpi-title">Instâncias Ativas</span>
+          <div class="kpi-icon">🤖</div>
+        </div>
+        <div class="kpi-value text-indigo" id="kpi-bots">0 / 0</div>
+        <div class="kpi-subtitle" id="kpi-bots-sub">0 conectadas agora</div>
       </div>
-      <div class="summary-card">
-        <div class="summary-title">Ganhos de Hoje (Rede)</div>
-        <div class="summary-value text-green" id="summary-today">$0.00</div>
+
+      <div class="kpi-card">
+        <div class="kpi-header">
+          <span class="kpi-title">Ganhos da Rede (Hoje)</span>
+          <div class="kpi-icon">💰</div>
+        </div>
+        <div class="kpi-value text-emerald" id="kpi-today">$0.00</div>
+        <div class="kpi-subtitle">Meta diária da rede: <span id="kpi-goal-total">$0.00</span></div>
       </div>
-      <div class="summary-card">
-        <div class="summary-title">Ganhos Acumulados (Lifetime)</div>
-        <div class="summary-value text-gradient" id="summary-lifetime">$0.00</div>
+
+      <div class="kpi-card">
+        <div class="kpi-header">
+          <span class="kpi-title">Total Acumulado</span>
+          <div class="kpi-icon">💎</div>
+        </div>
+        <div class="kpi-value text-gradient-purple" id="kpi-lifetime">$0.00</div>
+        <div class="kpi-subtitle">Faturamento total acumulado</div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-header">
+          <span class="kpi-title">Taxa Média da Rede</span>
+          <div class="kpi-icon">⚡</div>
+        </div>
+        <div class="kpi-value text-gradient-cyan" id="kpi-rate">$0.00/h</div>
+        <div class="kpi-subtitle">Rendimento médio estimado</div>
       </div>
     </div>
 
-    <div class="section-header">
-      <h2 class="section-title">Instâncias de Bots Registradas</h2>
+    <!-- TOOLBAR & FILTERS -->
+    <div class="toolbar">
+      <div class="section-headline">
+        <h2>Bots da Farm</h2>
+      </div>
+
+      <div class="filters-group">
+        <input type="text" id="search-input" class="search-input" placeholder="Buscar por nome ou persona..." oninput="handleFilterChange()">
+        <button class="filter-btn active" data-filter="all" onclick="setFilter('all', this)">Todos</button>
+        <button class="filter-btn" data-filter="active" onclick="setFilter('active', this)">Ativos</button>
+        <button class="filter-btn" data-filter="night_standby" onclick="setFilter('night_standby', this)">Repouso</button>
+        <button class="filter-btn" data-filter="offline" onclick="setFilter('offline', this)">Offline</button>
+      </div>
     </div>
 
-    <div class="bots-grid" id="bots-container">
-      <div class="empty-state">
-        <h3>Nenhum bot conectado ainda</h3>
-        <p>Configure a variável <code>DASHBOARD_URL</code> no <code>.env</code> dos seus bots para receber dados ao vivo.</p>
+    <!-- BOTS GRID -->
+    <div class="bots-grid" id="bots-grid">
+      <div class="empty-container">
+        <h3>Aguardando conexão dos bots...</h3>
+        <p>Nenhum bot reportou telemetria ainda nesta sessão.</p>
+        <div class="empty-code">DASHBOARD_URL=https://kickdash.onrender.com</div>
       </div>
     </div>
   </div>
 
   <script>
-    async function fetchBotsData() {
+    let globalBotsData = [];
+    let currentFilter = 'all';
+
+    async function loadDashboardData() {
       try {
         const res = await fetch('/api/bots');
         if (!res.ok) return;
         const data = await res.json();
-        renderDashboard(data);
+        globalBotsData = data.bots || [];
+        updateKpis(data.summary);
+        renderBotsGrid();
       } catch (err) {
-        console.error('Erro ao buscar dados do dashboard:', err);
+        console.error('Erro ao atualizar telemetria:', err);
       }
     }
 
-    function renderDashboard(data) {
-      const { summary, bots } = data;
+    function updateKpis(summary) {
+      document.getElementById('kpi-bots').textContent = `${summary.onlineBots} / ${summary.totalBots}`;
+      document.getElementById('kpi-bots-sub').textContent = `${summary.onlineBots} instâncias online`;
+      document.getElementById('kpi-today').textContent = `$${summary.totalTodayUsd.toFixed(2)}`;
+      document.getElementById('summary-today-val') ? null : null;
+      document.getElementById('kpi-lifetime').textContent = `$${summary.totalLifetimeUsd.toFixed(2)}`;
+      
+      const goalTotal = summary.totalBots * 1.00;
+      document.getElementById('kpi-goal-total').textContent = `$${goalTotal.toFixed(2)}`;
 
-      document.getElementById('summary-bots').textContent = `${summary.onlineBots} / ${summary.totalBots}`;
-      document.getElementById('summary-today').textContent = `$${summary.totalTodayUsd.toFixed(2)}`;
-      document.getElementById('summary-lifetime').textContent = `$${summary.totalLifetimeUsd.toFixed(2)}`;
+      const estimatedRate = summary.onlineBots * 0.0417;
+      document.getElementById('kpi-rate').textContent = `$${estimatedRate.toFixed(2)}/h`;
+    }
 
-      const container = document.getElementById('bots-container');
+    function setFilter(filter, btn) {
+      currentFilter = filter;
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      renderBotsGrid();
+    }
 
-      if (!bots || bots.length === 0) {
+    function handleFilterChange() {
+      renderBotsGrid();
+    }
+
+    function renderBotsGrid() {
+      const container = document.getElementById('bots-grid');
+      const searchQuery = document.getElementById('search-input').value.toLowerCase().trim();
+
+      const filtered = globalBotsData.filter(bot => {
+        // Filter Status
+        if (currentFilter !== 'all') {
+          if (currentFilter === 'active' && (bot.statusLabel !== 'active')) return false;
+          if (currentFilter === 'night_standby' && (bot.statusLabel !== 'night_standby')) return false;
+          if (currentFilter === 'offline' && (bot.statusLabel !== 'offline')) return false;
+        }
+        // Search Filter
+        if (searchQuery) {
+          const matchName = bot.botName.toLowerCase().includes(searchQuery);
+          const matchPersona = bot.persona.toLowerCase().includes(searchQuery);
+          return matchName || matchPersona;
+        }
+        return true;
+      });
+
+      if (filtered.length === 0) {
         container.innerHTML = `
-          <div class="empty-state">
-            <h3>Nenhum bot conectado ainda</h3>
-            <p>Configure as variáveis <code>BOT_NAME</code> e <code>DASHBOARD_URL</code> no <code>.env</code> para conectar seus bots.</p>
+          <div class="empty-container">
+            <h3>Nenhum bot encontrado</h3>
+            <p>Verifique o termo buscado ou altere os filtros selecionados acima.</p>
           </div>
         `;
         return;
       }
 
-      container.innerHTML = bots.map(bot => {
-        let badgeClass = 'status-active';
-        let badgeLabel = 'Ativo';
-        let cardAccent = '#10b981';
+      container.innerHTML = filtered.map(bot => {
+        let badgeClass = 'status-badge-active';
+        let badgeText = '● Ativo';
+        let accentColor = '#10b981';
 
         if (!bot.isOnline) {
-          badgeClass = 'status-offline';
-          badgeLabel = 'Offline';
-          cardAccent = '#ef4444';
+          badgeClass = 'status-badge-offline';
+          badgeText = '● Offline';
+          accentColor = '#f43f5e';
         } else if (bot.isNight) {
-          badgeClass = 'status-night';
-          badgeLabel = 'Repouso Noturno';
-          cardAccent = '#f59e0b';
+          badgeClass = 'status-badge-night';
+          badgeText = '🌙 Repouso Noturno';
+          accentColor = '#f59e0b';
         }
 
+        // Daily Goal Progress ($1.00 goal)
+        const goalPercent = Math.min(100, Math.round((bot.todayUsd / 1.00) * 100));
+        const initial = bot.botName.charAt(0).toUpperCase();
+
         return `
-          <div class="bot-card" style="--card-accent: ${cardAccent}">
-            <div class="bot-header">
-              <div class="bot-name">${escapeHtml(bot.botName)}</div>
-              <div class="bot-status-badge ${badgeClass}">${badgeLabel}</div>
+          <div class="bot-card" style="--card-color: ${accentColor}">
+            <div class="bot-card-glow"></div>
+            
+            <div class="bot-card-header">
+              <div class="bot-profile">
+                <div class="bot-avatar">${initial}</div>
+                <div class="bot-identity">
+                  <h3>${escapeHtml(bot.botName)}</h3>
+                  <p>ID: ${escapeHtml(bot.sessionId.slice(0, 8) || 'N/A')}</p>
+                </div>
+              </div>
+              <div class="status-badge ${badgeClass}">${badgeText}</div>
             </div>
 
-            <div class="bot-stats-row">
-              <div class="stat-item">
+            <!-- Daily Goal Progress -->
+            <div class="goal-progress-box">
+              <div class="goal-labels">
+                <span>Progresso Diário ($1.00)</span>
+                <span>${goalPercent}%</span>
+              </div>
+              <div class="progress-bar-bg">
+                <div class="progress-bar-fill" style="width: ${goalPercent}%"></div>
+              </div>
+            </div>
+
+            <!-- Earnings Panel -->
+            <div class="bot-metrics-panel">
+              <div class="stat-block">
                 <p>Hoje</p>
-                <h3 class="text-green">$${bot.todayUsd.toFixed(2)}</h3>
+                <h4 class="text-emerald">$${bot.todayUsd.toFixed(2)}</h4>
               </div>
-              <div class="stat-item">
-                <p>Lifetime</p>
-                <h3>$${bot.lifetimeUsd.toFixed(2)}</h3>
+              <div class="stat-block">
+                <p>Acumulado</p>
+                <h4>$${bot.lifetimeUsd.toFixed(2)}</h4>
               </div>
             </div>
 
-            <div class="bot-details">
-              <div class="detail-row">
-                <span>Pendente / Retirada:</span>
-                <span>$${bot.pendingUsd}</span>
+            <!-- Technical Specs -->
+            <div class="spec-grid">
+              <div class="spec-item">
+                <span>Pendente / Saque:</span>
+                <span class="value">$${escapeHtml(bot.pendingUsd)}</span>
               </div>
-              <div class="detail-row">
+              <div class="spec-item">
                 <span>Persona Circadiana:</span>
-                <span>${escapeHtml(bot.persona)}</span>
+                <span class="value"><span class="pill-tag">${escapeHtml(bot.persona)}</span></span>
               </div>
-              <div class="detail-row">
+              <div class="spec-item">
                 <span>Fase Atual:</span>
-                <span>${escapeHtml(bot.phase)}</span>
+                <span class="value">${escapeHtml(bot.phase)}</span>
               </div>
-              <div class="detail-row">
-                <span>Versões (Ext / CC):</span>
-                <span>v${escapeHtml(bot.extVersion)} / v${escapeHtml(bot.ccVersion)}</span>
+              <div class="spec-item">
+                <span>Extensão / Claude Code:</span>
+                <span class="value">v${escapeHtml(bot.extVersion)} / v${escapeHtml(bot.ccVersion)}</span>
               </div>
             </div>
 
-            <div class="bot-footer">
-              <span>Atualizado há: ${bot.lastSeenSecondsAgo}s</span>
-              <span>ID: ${escapeHtml(bot.sessionId.slice(0, 8) || 'N/A')}</span>
+            <div class="bot-card-footer">
+              <div class="last-seen">
+                <span>⏱ Visto há ${bot.lastSeenSecondsAgo}s</span>
+              </div>
+              <button class="copy-id-btn" title="Copiar ID" onclick="navigator.clipboard.writeText('${bot.sessionId}')">
+                📋 ${escapeHtml(bot.sessionId.slice(0, 6))}...
+              </button>
             </div>
           </div>
         `;
@@ -444,8 +786,8 @@
         .replace(/'/g, "&#039;");
     }
 
-    fetchBotsData();
-    setInterval(fetchBotsData, 5000);
+    loadDashboardData();
+    setInterval(loadDashboardData, 5000);
   </script>
 </body>
 </html>

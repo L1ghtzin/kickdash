@@ -709,13 +709,12 @@
     }
 
     function updateKpis(summary) {
-      document.getElementById('kpi-bots').textContent = `${summary.onlineBots} / ${summary.totalBots}`;
-      document.getElementById('kpi-bots-sub').textContent = `${summary.onlineBots} instâncias online`;
+      const targetCount = summary.targetBots || Math.max(4, summary.totalBots || 0);
+      document.getElementById('kpi-bots').textContent = `${summary.onlineBots} / ${targetCount}`;
+      document.getElementById('kpi-bots-sub').textContent = `${summary.onlineBots} instâncias online (${targetCount} na farm)`;
       document.getElementById('kpi-today').textContent = `$${summary.totalTodayUsd.toFixed(2)}`;
-      document.getElementById('summary-today-val') ? null : null;
-      document.getElementById('kpi-lifetime').textContent = `$${summary.totalLifetimeUsd.toFixed(2)}`;
       
-      const goalTotal = summary.totalBots * 1.00;
+      const goalTotal = summary.totalGoalUsd || (targetCount * 1.00);
       document.getElementById('kpi-goal-total').textContent = `$${goalTotal.toFixed(2)}`;
 
       const estimatedRate = summary.onlineBots * 0.0417;
@@ -756,9 +755,14 @@
       if (globalBotsData.length === 0) {
         container.innerHTML = `
           <div class="empty-container">
-            <h3>Aguardando conexão dos bots...</h3>
-            <p>Nenhum bot enviou telemetria ainda nesta sessão do servidor.</p>
-            <div class="empty-code">BOT_NAME=Light<br>DASHBOARD_URL=https://kickdash.onrender.com</div>
+            <h3>Aguardando conexão dos bots (4 instâncias)...</h3>
+            <p>Nenhum bot enviou telemetria ainda nesta sessão. Defina o <code>BOT_NAME</code> para cada um:</p>
+            <div class="empty-code">
+              BOT_NAME=Bot-1 DASHBOARD_URL=https://kickdash.onrender.com node dist/index.js run<br>
+              BOT_NAME=Bot-2 DASHBOARD_URL=https://kickdash.onrender.com node dist/index.js run<br>
+              BOT_NAME=Bot-3 DASHBOARD_URL=https://kickdash.onrender.com node dist/index.js run<br>
+              BOT_NAME=Bot-4 DASHBOARD_URL=https://kickdash.onrender.com node dist/index.js run
+            </div>
           </div>
         `;
         return;

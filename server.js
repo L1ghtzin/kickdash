@@ -240,12 +240,17 @@ const server = http.createServer(async (req, res) => {
 
       list.sort((a, b) => a.botName.localeCompare(b.botName));
 
+      const targetBots = Math.max(4, list.length);
+      const totalGoalUsd = Math.round(targetBots * 1.00 * 100) / 100;
+
       return sendJson(res, 200, {
         summary: {
           totalBots: list.length,
+          targetBots,
           onlineBots: list.filter(b => b.isOnline).length,
           totalTodayUsd: Math.round(totalToday * 100) / 100,
-          totalLifetimeUsd: Math.round(totalLifetime * 100) / 100
+          totalLifetimeUsd: Math.round(totalLifetime * 100) / 100,
+          totalGoalUsd
         },
         bots: list
       });

@@ -799,6 +799,15 @@
           ? bot.hourlyUsd
           : (bot.todayUsd > 0 ? (bot.todayUsd / hoursElapsedToday) : 0);
 
+        const demoBoxHtml = bot.isDemo ? `
+          <div style="margin: 0.5rem 0; padding: 0.6rem 0.8rem; background: rgba(245, 158, 11, 0.12); border: 1px dashed #f59e0b; border-radius: 8px; display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; flex-wrap: wrap;">
+            <span style="font-size: 0.75rem; color: #fbbf24; font-weight: 600;">⚠️ Modo Demo (Sem Login)</span>
+            <button onclick="sendAdminCommand('login', '${escapeHtml(bot.botName)}')" style="padding: 0.35rem 0.65rem; background: #d97706; color: #fff; border: none; border-radius: 6px; font-weight: bold; font-size: 0.75rem; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='#b45309'" onmouseout="this.style.background='#d97706'">
+              🔑 Autenticar Bot
+            </button>
+          </div>
+        ` : '';
+
         const loginBoxHtml = bot.activeLoginUrl ? `
           <div class="login-action-box" style="margin: 0.75rem 0; padding: 0.75rem; background: rgba(59, 130, 246, 0.15); border: 1px solid #3b82f6; border-radius: 10px; text-align: center;">
             <p style="font-size: 0.8rem; margin-bottom: 0.5rem; color: #93c5fd; font-weight: 600;">🔐 Autenticação Google Solicitada</p>
@@ -813,6 +822,10 @@
             ⚡ <strong>Status:</strong> ${escapeHtml(bot.commandStatus || bot.commandMessage)}
           </div>
         ` : '';
+
+        const lastSeenText = bot.lastSeenSecondsAgo < 60
+          ? `${bot.lastSeenSecondsAgo}s`
+          : `${Math.floor(bot.lastSeenSecondsAgo / 60)}m ${bot.lastSeenSecondsAgo % 60}s`;
 
         return `
           <div class="bot-card" style="--card-color: ${accentColor}">
@@ -829,6 +842,7 @@
               <div class="status-badge ${badgeClass}">${badgeText}</div>
             </div>
 
+            ${demoBoxHtml}
             ${statusBoxHtml}
             ${loginBoxHtml}
 
@@ -877,7 +891,7 @@
 
             <div class="bot-card-footer" style="flex-wrap: wrap; gap: 0.4rem;">
               <div class="last-seen">
-                <span>⏱ Visto há ${bot.lastSeenSecondsAgo}s</span>
+                <span>⏱ Visto há ${lastSeenText}</span>
               </div>
               <div style="display: flex; gap: 0.3rem; margin-left: auto;">
                 <button class="btn-card-action" onclick="sendAdminCommand('login', '${escapeHtml(bot.botName)}')" title="Gerar link de login Google">🔑 Login</button>

@@ -9,8 +9,38 @@ const __dirname = path.dirname(__filename);
 const PORT = process.env.PORT || 3000;
 const OFFLINE_THRESHOLD_MS = 3 * 60 * 1000; // 3 minutos sem sinal = offline
 
+const STORE_FILE = path.join(__dirname, "bots-store.json");
 const botsStore = new Map();
 const pendingCommands = new Map();
+
+function loadBotsStoreFromDisk() {
+  try {
+    if (fs.existsSync(STORE_FILE)) {
+      const content = fs.readFileSync(STORE_FILE, "utf8");
+      const list = JSON.parse(content);
+      if (Array.isArray(list)) {
+        for (const item of list) {
+          if (item && item.botName) {
+            botsStore.set(item.botName, item);
+          }
+        }
+      }
+    }
+  } catch (err) {
+    console.error("[SERVER] Erro ao carregar bots-store.json:", err);
+  }
+}
+
+function saveBotsStoreToDisk() {
+  try {
+    const list = Array.from(botsStore.values());
+    fs.writeFileSync(STORE_FILE, JSON.stringify(list, null, 2), "utf8");
+  } catch (err) {
+    console.error("[SERVER] Erro ao salvar bots-store.json:", err);
+  }
+}
+
+loadBotsStoreFromDisk();
 
 function sendJson(res, statusCode, data) {
   res.writeHead(statusCode, {
@@ -123,6 +153,7 @@ const server = http.createServer(async (req, res) => {
           if (loginUrl !== undefined) record.activeLoginUrl = loginUrl || null;
           if (status !== undefined) record.commandStatus = status || null;
           if (message !== undefined) record.commandMessage = message || null;
+          saveBotsStoreToDisk();
         }
         return sendJson(res, 200, { status: "success" });
       } catch {
@@ -147,6 +178,7 @@ const server = http.createServer(async (req, res) => {
           todayUsd: parseFloat(data.todayUsd) || 0,
           lifetimeUsd: parseFloat(data.lifetimeUsd) || 0,
           hourlyUsd: parseFloat(data.hourlyUsd) || 0,
+          isDemo: Boolean(data.isDemo),
           pendingUsd: String(data.pendingUsd || "0.00"),
           persona: data.persona || "desconhecido",
           isNight: Boolean(data.isNight),
@@ -162,6 +194,7 @@ const server = http.createServer(async (req, res) => {
         };
 
         botsStore.set(botName, botRecord);
+        saveBotsStoreToDisk();
 
         // Verificar se há comando pendente para este bot
         let pendingCommand = pendingCommands.get(botName);

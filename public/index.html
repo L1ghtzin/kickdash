@@ -676,11 +676,22 @@
         return true;
       });
 
+      if (globalBotsData.length === 0) {
+        container.innerHTML = `
+          <div class="empty-container">
+            <h3>Aguardando conexão dos bots...</h3>
+            <p>Nenhum bot enviou telemetria ainda nesta sessão do servidor.</p>
+            <div class="empty-code">BOT_NAME=Light<br>DASHBOARD_URL=https://kickdash.onrender.com</div>
+          </div>
+        `;
+        return;
+      }
+
       if (filtered.length === 0) {
         container.innerHTML = `
           <div class="empty-container">
-            <h3>Nenhum bot encontrado</h3>
-            <p>Verifique o termo buscado ou altere os filtros selecionados acima.</p>
+            <h3>Nenhum bot encontrado para o filtro</h3>
+            <p>Nenhum bot corresponde ao termo "<strong>${escapeHtml(searchQuery)}</strong>" ou ao filtro selecionado.</p>
           </div>
         `;
         return;

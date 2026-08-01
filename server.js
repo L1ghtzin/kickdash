@@ -49,8 +49,10 @@ const server = http.createServer(async (req, res) => {
     return res.end();
   }
 
+  const cleanPath = pathname.toLowerCase().replace(/\/+$/, "") || "/";
+
   // Rota 1: GET /ping (Health check para Render e Uptime Monitors)
-  if (method === "GET" && pathname === "/ping") {
+  if (method === "GET" && cleanPath === "/ping") {
     return sendJson(res, 200, {
       status: "ok",
       service: "kickbacks-dashboard",
@@ -60,7 +62,7 @@ const server = http.createServer(async (req, res) => {
   }
 
   // Rota 2: POST /api/telemetry (Recebe dados dos bots)
-  if (method === "POST" && pathname === "/api/telemetry") {
+  if (method === "POST" && cleanPath === "/api/telemetry") {
     try {
       const data = await parseJsonBody(req);
       if (!data || typeof data.botName !== "string" || !data.botName.trim()) {
@@ -93,7 +95,7 @@ const server = http.createServer(async (req, res) => {
   }
 
   // Rota 3: GET /api/bots (Retorna a lista agregada de todos os bots)
-  if (method === "GET" && pathname === "/api/bots") {
+  if (method === "GET" && cleanPath === "/api/bots") {
     const now = Date.now();
     const list = [];
     let totalToday = 0;
@@ -127,27 +129,27 @@ const server = http.createServer(async (req, res) => {
     });
   }
 
-  // Rota 4: Servir arquivos estáticos do Dashboard (public/index.html)
-  let filePath = path.join(__dirname, "public", pathname === "/" ? "index.html" : pathname);
-  
-  if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
-    const ext = path.extname(filePath).toLowerCase();
-    const contentTypes = {
-      ".html": "text/html; charset=utf-8",
-      ".css": "text/css; charset=utf-8",
-      ".js": "application/javascript; charset=utf-8",
-      ".json": "application/json",
-      ".png": "image/png",
-      ".jpg": "image/jpeg",
-      ".svg": "image/svg+xml"
-    };
+  // Rota 4: Servir arquivos estáticos do Dashboard (com fallback para index.html)
+  let filePath = path.join(__dirname, "public", cleanPath === "/" ? "index.html" : cleanPath);
 
-    const contentType = contentTypes[ext] || "application/octet-stream";
-    res.writeHead(200, { "Content-Type": contentType });
-    return fs.createReadStream(filePath).pipe(res);
+  if (!fs.existsSync(filePath) || !fs.statSync(filePath).isFile()) {
+    filePath = path.join(__dirname, "public", "index.html");
   }
 
-  sendJson(res, 404, { error: "Rota não encontrada." });
+  const ext = path.extname(filePath).toLowerCase();
+  const contentTypes = {
+    ".html": "text/html; charset=utf-8",
+    ".css": "text/css; charset=utf-8",
+    ".js": "application/javascript; charset=utf-8",
+    ".json": "application/json",
+    ".png": "image/png",
+    ".jpg": "image/jpeg",
+    ".svg": "image/svg+xml"
+  };
+
+  const contentType = contentTypes[ext] || "text/html; charset=utf-8";
+  res.writeHead(200, { "Content-Type": contentType });
+  return fs.createReadStream(filePath).pipe(res);
 });
 
 server.listen(PORT, "0.0.0.0", () => {

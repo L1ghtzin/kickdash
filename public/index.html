@@ -651,9 +651,6 @@
         <button class="admin-btn btn-update-all" onclick="sendAdminCommand('update', 'all')" title="Executa git pull, build e restart em todos os bots">
           🔄 Atualizar Todos (git pull + build)
         </button>
-        <button class="admin-btn btn-login-all" onclick="sendAdminCommand('login', 'all')" title="Gera URL de autenticação Google para todos os bots">
-          🔑 Gerar Login em Todos
-        </button>
         <input type="text" id="search-input" class="search-input" placeholder="Buscar por nome ou persona..." oninput="handleFilterChange()">
         <button class="filter-btn active" data-filter="all" onclick="setFilter('all', this)">Todos</button>
         <button class="filter-btn" data-filter="active" onclick="setFilter('active', this)">Ativos</button>

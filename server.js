@@ -122,7 +122,6 @@ const server = http.createServer(async (req, res) => {
         const cmdObj = { id: String(Date.now()), action };
 
         if (!targetBot || targetBot === "all") {
-          pendingCommands.set("ALL", cmdObj);
           for (const [bName, record] of botsStore.entries()) {
             pendingCommands.set(bName, cmdObj);
             record.commandStatus = `Solicitado: ${action}`;
@@ -197,10 +196,7 @@ const server = http.createServer(async (req, res) => {
         saveBotsStoreToDisk();
 
         // Verificar se há comando pendente para este bot
-        let pendingCommand = pendingCommands.get(botName);
-        if (!pendingCommand && pendingCommands.has("ALL")) {
-          pendingCommand = pendingCommands.get("ALL");
-        }
+        const pendingCommand = pendingCommands.get(botName) || null;
         if (pendingCommand) {
           pendingCommands.delete(botName);
         }
@@ -209,7 +205,7 @@ const server = http.createServer(async (req, res) => {
           status: "success",
           botName,
           timestamp: botRecord.updatedAt,
-          pendingCommand: pendingCommand || null
+          pendingCommand
         });
       } catch {
         return sendJson(res, 400, { error: "JSON inválido no corpo da requisição." });

@@ -816,8 +816,9 @@
         ` : '';
 
         const statusBoxHtml = (bot.commandStatus || bot.commandMessage) ? `
-          <div style="font-size: 0.75rem; color: #f59e0b; background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3); padding: 0.4rem 0.6rem; border-radius: 6px; margin: 0.5rem 0;">
-            ⚡ <strong>Status:</strong> ${escapeHtml(bot.commandStatus || bot.commandMessage)}
+          <div style="font-size: 0.75rem; color: #f59e0b; background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3); padding: 0.4rem 0.6rem; border-radius: 6px; margin: 0.5rem 0; display: flex; align-items: center; justify-content: space-between; gap: 0.5rem;">
+            <span>⚡ <strong>Status:</strong> ${escapeHtml(bot.commandStatus || bot.commandMessage)}</span>
+            <button onclick="sendAdminCommand('clear_status', '${escapeHtml(bot.botName)}')" style="background: none; border: none; color: #f59e0b; font-size: 1rem; cursor: pointer; padding: 0; line-height: 1;" title="Fechar status">&times;</button>
           </div>
         ` : '';
 

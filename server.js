@@ -42,6 +42,34 @@ function saveBotsStoreToDisk() {
 
 loadBotsStoreFromDisk();
 
+function getCleanCommandFields(record, now) {
+  let status = record.commandStatus || null;
+  let message = record.commandMessage || null;
+  let updatedAt = record.commandUpdatedAt || 0;
+
+  if (status) {
+    const elapsedMs = now - updatedAt;
+    const isTerminal = 
+      status.includes("sucesso") ||
+      status.includes("concluíd") ||
+      status.includes("expirado") ||
+      status.includes("cancelado") ||
+      status.includes("Erro");
+
+    if ((isTerminal && elapsedMs > 8000) || (!isTerminal && elapsedMs > 45000)) {
+      status = null;
+      message = null;
+      updatedAt = 0;
+      record.commandStatus = null;
+      record.commandMessage = null;
+      record.commandUpdatedAt = 0;
+    }
+  }
+
+  return { commandStatus: status, commandMessage: message, commandUpdatedAt: updatedAt };
+}
+
+
 function sendJson(res, statusCode, data) {
   res.writeHead(statusCode, {
     "Content-Type": "application/json",
@@ -111,21 +139,41 @@ const server = http.createServer(async (req, res) => {
       });
     }
 
-    // Rota: POST /api/admin/command (Solicita ações como update ou login)
+    // Rota: POST /api/admin/command (Solicita ações como update ou login ou clear_status)
     if (method === "POST" && cleanPath === "/api/admin/command") {
       try {
         const data = await parseJsonBody(req);
-        const action = data.action; // "update" | "login"
+        const action = data.action; // "update" | "login" | "clear_status"
         const targetBot = data.targetBot; // "all" ou botName
         if (!action) return sendJson(res, 400, { error: "Ação é obrigatória." });
 
+        if (action === "clear_status") {
+          const clearBot = (bName) => {
+            if (botsStore.has(bName)) {
+              const rec = botsStore.get(bName);
+              rec.commandStatus = null;
+              rec.commandMessage = null;
+              rec.commandUpdatedAt = 0;
+            }
+          };
+          if (!targetBot || targetBot === "all") {
+            for (const bName of botsStore.keys()) clearBot(bName);
+          } else {
+            clearBot(targetBot);
+          }
+          saveBotsStoreToDisk();
+          return sendJson(res, 200, { status: "success", action });
+        }
+
         const cmdObj = { id: String(Date.now()), action };
+        const now = Date.now();
 
         if (!targetBot || targetBot === "all") {
           for (const [bName, record] of botsStore.entries()) {
             pendingCommands.set(bName, cmdObj);
             record.commandStatus = `Solicitado: ${action}`;
             record.commandMessage = `Aguardando conexão do bot para executar '${action}'...`;
+            record.commandUpdatedAt = now;
           }
         } else {
           pendingCommands.set(targetBot, cmdObj);
@@ -133,6 +181,7 @@ const server = http.createServer(async (req, res) => {
             const record = botsStore.get(targetBot);
             record.commandStatus = `Solicitado: ${action}`;
             record.commandMessage = `Aguardando conexão do bot para executar '${action}'...`;
+            record.commandUpdatedAt = now;
           }
         }
 
@@ -152,6 +201,7 @@ const server = http.createServer(async (req, res) => {
           if (loginUrl !== undefined) record.activeLoginUrl = loginUrl || null;
           if (status !== undefined) record.commandStatus = status || null;
           if (message !== undefined) record.commandMessage = message || null;
+          record.commandUpdatedAt = Date.now();
           saveBotsStoreToDisk();
         }
         return sendJson(res, 200, { status: "success" });
@@ -172,6 +222,8 @@ const server = http.createServer(async (req, res) => {
         const now = Date.now();
         const existing = botsStore.get(botName) || {};
 
+        const { commandStatus, commandMessage, commandUpdatedAt } = getCleanCommandFields(existing, now);
+
         const botRecord = {
           botName,
           todayUsd: parseFloat(data.todayUsd) || 0,
@@ -186,8 +238,9 @@ const server = http.createServer(async (req, res) => {
           ccVersion: data.ccVersion || "2.1.220",
           sessionId: data.sessionId || "",
           activeLoginUrl: existing.activeLoginUrl || null,
-          commandStatus: existing.commandStatus || null,
-          commandMessage: existing.commandMessage || null,
+          commandStatus,
+          commandMessage,
+          commandUpdatedAt,
           lastSeenMs: now,
           updatedAt: new Date(now).toISOString()
         };
@@ -220,6 +273,7 @@ const server = http.createServer(async (req, res) => {
       let totalLifetime = 0;
 
       for (const bot of botsStore.values()) {
+        getCleanCommandFields(bot, now);
         const isOnline = (now - bot.lastSeenMs) < OFFLINE_THRESHOLD_MS;
         const botStatus = !isOnline ? "offline" : (bot.isNight ? "night_standby" : "active");
         
